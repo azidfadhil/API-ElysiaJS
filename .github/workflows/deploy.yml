@@ -21,15 +21,13 @@ jobs:
           script: |
             cd /var/www/api-elysia
 
-            git fetch --all
+            git config --global --add safe.directory /var/www/api-elysia
+
+            git fetch origin
             git reset --hard origin/main
 
             docker build --no-cache -t api-elysia .
 
-            docker stop api-elysia || true
-            docker rm api-elysia || true
+            docker rm -f api-elysia || true
 
-            docker run -d \
-              -p 8002:3000 \
-              --name api-elysia \
-              api-elysia
+            docker run -d -p 8002:3000 --name api-elysia api-elysia
