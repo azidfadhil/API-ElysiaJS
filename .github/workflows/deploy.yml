@@ -24,4 +24,4 @@ jobs:
             docker build -t api-elysia .
             docker stop api-elysia || true
             docker rm api-elysia || true
-            docker run -d -p 3000:3000 --name api-elysia api-elysia
+            docker run -d -p 8002:3000 --name api-elysia api-elysia
