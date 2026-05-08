@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 
 const app = new Elysia()
   .get("/", () => ({
-    message: "Haloow! Ini adalah API ElysiaJS dengan bahasa Typescript!",
+    message: "Haloowww! Ini adalah API ElysiaJS dengan bahasa Typescript!",
   }))
   .listen(3000);
 
