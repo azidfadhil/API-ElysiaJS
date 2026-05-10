@@ -28,5 +28,6 @@ jobs:
             EOF
 
             echo "🐳 restart docker"
-            docker compose down || true
-            docker compose up -d --build
+            sudo docker compose build
+            sudo docker compose up -d
+            sudo docker image prune -f
