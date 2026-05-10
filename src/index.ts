@@ -16,7 +16,7 @@ async function bootstrap() {
       .group("/api/v1", (app) =>
         app
           .get("/", () => ({
-            message: "API ElysiaJS 🚀"
+            message: "API ElysiaJS! 🚀"
           }))
           .use(userModule)
       )
