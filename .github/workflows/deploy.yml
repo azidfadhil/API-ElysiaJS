@@ -2,17 +2,14 @@ name: Deploy API
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to VPS via SSH
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -22,15 +19,14 @@ jobs:
             cd /var/www/api-elysia
 
             git config --global --add safe.directory /var/www/api-elysia
-
-            sudo chown -R ubuntu:ubuntu /var/www/api-elysia || true
-            rm -f /var/www/api-elysia/.git/index.lock || true
-
             git fetch origin
             git reset --hard origin/main
 
-            docker build --no-cache -t api-elysia .
+            echo "⚙️ create .env file"
+            cat > .env << EOF
+            ${{ secrets.ENV_ELYSIA }}
+            EOF
 
-            docker rm -f api-elysia || true
-
-            docker run -d -p 8002:3000 --name api-elysia api-elysia
+            echo "🐳 restart docker"
+            docker compose down || true
+            docker compose up -d --build

@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model mst_modules {
+  id              BigInt            @id @default(autoincrement())
+  module_code     String            @unique @db.VarChar(100)
+  module_name     String            @db.VarChar(255)
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?         @db.Timestamp(6)
+  mst_permissions mst_permissions[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model mst_permissions {
+  id                   BigInt                 @id @default(autoincrement())
+  module_id            BigInt
+  permission_code      String                 @db.VarChar(100)
+  permission_name      String                 @db.VarChar(255)
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?              @db.Timestamp(6)
+  mst_modules          mst_modules            @relation(fields: [module_id], references: [id], onDelete: Cascade, map: "fk_mst_permissions_module")
+  trx_role_permissions trx_role_permissions[]
+
+  @@unique([module_id, permission_code], map: "uq_module_permission_code")
+}
+
+model mst_roles {
+  id                   BigInt                 @id @default(autoincrement())
+  role_code            String                 @unique @db.VarChar(100)
+  role_name            String                 @db.VarChar(255)
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?              @db.Timestamp(6)
+  trx_role_permissions trx_role_permissions[]
+  trx_user_roles       trx_user_roles[]
+}
+
+model mst_users {
+  id             BigInt           @id @default(autoincrement())
+  full_name      String           @db.VarChar(255)
+  username       String           @unique @db.VarChar(100)
+  email          String           @unique @db.VarChar(255)
+  password_hash  String           @db.VarChar(255)
+  is_active      Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?        @db.Timestamp(6)
+  deleted_at     DateTime?        @db.Timestamp(6)
+  trx_user_roles trx_user_roles[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model trx_role_permissions {
+  id              BigInt          @id @default(autoincrement())
+  role_id         BigInt
+  permission_id   BigInt
+  created_at      DateTime        @default(now()) @db.Timestamp(6)
+  mst_permissions mst_permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, map: "fk_trx_role_permissions_permission")
+  mst_roles       mst_roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "fk_trx_role_permissions_role")
+
+  @@unique([role_id, permission_id], map: "uq_trx_role_permissions")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model trx_user_roles {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  role_id    BigInt
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  mst_roles  mst_roles @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "fk_trx_user_roles_role")
+  mst_users  mst_users @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_trx_user_roles_user")
+
+  @@unique([user_id, role_id], map: "uq_trx_user_roles")
+}
