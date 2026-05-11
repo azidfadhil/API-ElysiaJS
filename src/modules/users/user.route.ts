@@ -34,22 +34,8 @@ export const userModule = new Elysia({
     })
   })
 
-  .get("/:id", async ({ params, set }) => {
-    const user = await getUserById(
-      BigInt(params.id)
-    )
-
-    if (!user) {
-
-      set.status = 404
-
-      return response({
-        error: 404,
-        message: "User not found",
-        data: null
-      })
-
-    }
+  .get("/:id", async ({ params }) => {
+    const user = await getUserById(BigInt(params.id))
 
     return response({
       message: "Success get user",
@@ -74,11 +60,7 @@ export const userModule = new Elysia({
   )
 
   .put("/:id", async ({ params, body }) => {
-
-      const user = await updateUser(
-        BigInt(params.id),
-        body
-      )
+      const user = await updateUser(BigInt(params.id), body)
 
       return response({
         message: "User updated successfully",
@@ -90,11 +72,8 @@ export const userModule = new Elysia({
     }
   )
 
-  .delete("/:id", async ({ params }) => {
-
-    await deleteUser(
-      BigInt(params.id)
-    )
+  .delete("/:id", async ({ params, set }) => {
+    await deleteUser(BigInt(params.id))
 
     return response({
       message: "User deleted successfully"
