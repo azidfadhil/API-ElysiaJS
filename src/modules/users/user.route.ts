@@ -1,34 +1,17 @@
 import { Elysia, t } from "elysia"
 import { response } from "../../utils/response"
+import { getUsers, getUserById, createUser, updateUser, deleteUser } from "./user.service"
+import { createUserSchema, updateUserSchema } from "./user.schema"
 
-import {
-  getUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser
-} from "./user.service"
-
-import {
-  createUserSchema,
-  updateUserSchema
-} from "./user.schema"
-
-export const userModule = new Elysia({ 
-  prefix: "/users" 
-})
+export const userModule = new Elysia({ prefix: "/users" })
 
   .get("/", async ({ query }) => {
-
     const page = Number(query.page || 1)
     const perPage = Number(query.per_page || 10)
-
     const result = await getUsers(page, perPage)
 
     return response({
-      message: result.users.length > 0
-        ? "Success get users"
-        : "Users not found",
+      message: result.users.length > 0 ? "Success get users" : "Users not found",
       pagination: result.pagination,
       data: result.users
     })
@@ -44,19 +27,15 @@ export const userModule = new Elysia({
   })
 
   .post("/", async ({ body, set }) => {
-
       const user = await createUser(body)
-
       set.status = 201
 
       return response({
         message: "User created successfully",
         data: user
       })
-    },
-    {
-      body: createUserSchema
-    }
+    }, 
+    { body: createUserSchema }
   )
 
   .put("/:id", async ({ params, body }) => {
@@ -67,12 +46,10 @@ export const userModule = new Elysia({
         data: user
       })
     },
-    {
-      body: updateUserSchema
-    }
+    { body: updateUserSchema }
   )
 
-  .delete("/:id", async ({ params, set }) => {
+  .delete("/:id", async ({ params }) => {
     await deleteUser(BigInt(params.id))
 
     return response({
