@@ -1,37 +1,17 @@
 import { t } from "elysia"
 
-export const createUserSchema = t.Object({
-  full_name: t.String({
-    minLength: 3
-  }),
+const baseUserSchema = {
+  full_name: t.String({ minLength: 3 }),
+  username:  t.String({ minLength: 3 }),
+  email:     t.String({ format: "email" }),
+  password:  t.String({ minLength: 8 })
+}
 
-  username: t.String({
-    minLength: 3
-  }),
-
-  email: t.String({
-    format: "email"
-  }),
-
-  password: t.String({
-    minLength: 8
-  })
-})
+export const createUserSchema = t.Object(baseUserSchema)
 
 export const updateUserSchema = t.Object({
-  full_name: t.String({
-    minLength: 3
-  }),
-
-  username: t.String({
-    minLength: 3
-  }),
-
-  email: t.String({
-    format: "email"
-  }),
-
-  password: t.String({
-    minLength: 8
-  })
+  full_name: t.Optional(baseUserSchema.full_name),
+  username:  t.Optional(baseUserSchema.username),
+  email:     t.Optional(baseUserSchema.email),
+  password:  t.Optional(baseUserSchema.password)
 })
