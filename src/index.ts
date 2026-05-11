@@ -5,6 +5,7 @@ import { swagger } from "@elysiajs/swagger"
 
 import { prisma } from "./database/prisma"
 import { userModule } from "./modules/users/user.route"
+import { AppError } from "./utils/errors"
 
 async function bootstrap() {
   try {
@@ -13,11 +14,40 @@ async function bootstrap() {
 
     const app = new Elysia()
 
+      .onError(({ code, error, set }) => {
+        if (error instanceof AppError) {
+          set.status = error.statusCode
+          return {
+            error: error.statusCode,
+            message: error.message,
+            pagination: null,
+            data: null
+          }
+        }
+
+        if (code === "VALIDATION") {
+          set.status = 422
+          return {
+            error: 422,
+            message: "Validation failed",
+            pagination: null,
+            data: null
+          }
+        }
+
+        console.error(`[ERROR] ${error}`)
+        set.status = 500
+        return {
+          error: 500,
+          message: "Internal server error",
+          pagination: null,
+          data: null
+        }
+      })
+
       .group("/api/v1", (app) =>
         app
-          .get("/", () => ({
-            message: "API ElysiaJS! 🚀"
-          }))
+          .get("/", () => ({ message: "API ElysiaJS! 🚀" }))
           .use(userModule)
       )
 
@@ -40,7 +70,6 @@ async function bootstrap() {
   } catch (error) {
     console.error("❌ Failed to start application")
     console.error(error)
-
     process.exit(1)
   }
 }
