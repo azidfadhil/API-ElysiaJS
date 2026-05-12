@@ -1,19 +1,26 @@
-FROM oven/bun:1.3.13
+# Stage 1: Builder
+FROM oven/bun:1.3.13 AS builder
 
 WORKDIR /app
 
-# 1. Install dependencies
 COPY package.json bun.lock ./
-RUN bun install
+RUN bun install --frozen-lockfile
 
-# 2. Copy source
 COPY . .
 
-# 3. Generate Prisma Client
 RUN bunx prisma generate
+RUN bun run build
 
-# 4. Expose port
+# Stage 2: Runner (image lebih kecil)
+FROM oven/bun:1.3.13-slim AS runner
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+
 EXPOSE 3000
 
-# 5. Run app (langsung src, no build dulu)
-CMD ["bun", "run", "src/index.ts"]
+CMD ["bun", "run", "start"]

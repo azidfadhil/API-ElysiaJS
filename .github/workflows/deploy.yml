@@ -27,16 +27,15 @@ jobs:
             git reset --hard origin/main
 
             echo "⚙️ Create .env"
-            cat > .env << EOF
+            cat > .env << 'EOF'
             ${{ secrets.ENV_ELYSIA }}
             EOF
 
-            echo "🧹 Cleanup"
-            docker compose down --remove-orphans || true
-            docker rm -f api-elysia || true
-
             echo "🐳 Deploy"
-            docker compose up -d --build
+            docker compose up -d --build --remove-orphans
 
             echo "🧽 Clean images"
             docker image prune -f
+
+            echo "✅ Deploy complete"
+            docker compose ps
