@@ -1,11 +1,15 @@
 import "dotenv/config"
 
 import { Elysia } from "elysia"
+import { jwt } from "@elysiajs/jwt"
 import { swagger } from "@elysiajs/swagger"
 
 import { prisma } from "./database/prisma"
-import { userModule } from "./modules/users/user.route"
 import { AppError } from "./utils/errors"
+import { UnauthorizedError } from "./utils/errors"
+
+import { authModule } from "./modules/auth/auth.route"
+import { userModule } from "./modules/users/user.route"
 
 async function bootstrap() {
   try {
@@ -45,11 +49,38 @@ async function bootstrap() {
         }
       })
 
+      .use(
+        jwt({
+          name: "jwt",
+          secret: Bun.env.JWT_SECRET!
+        })
+      )
+
       .group("/api/v1", (app) =>
         app
           .get("/", () => ({ message: "API ElysiaJS! 🚀" }))
-          .use(userModule)
-      )
+          .use(authModule)
+          .guard(
+            {
+              beforeHandle: async ({ jwt, headers }) => {
+
+                const authorization = headers["authorization"]
+
+                if (!authorization || !authorization.startsWith("Bearer ")) {
+                  throw new UnauthorizedError("Missing or invalid authorization header")
+                }
+
+                const token = authorization.split(" ")[1]
+                const payload = await jwt.verify(token)
+
+                if (!payload) {
+                  throw new UnauthorizedError("Invalid or expired token")
+                }
+              }
+            },
+            (app) => app.use(userModule)
+          )
+        )
 
       .use(
         swagger({
