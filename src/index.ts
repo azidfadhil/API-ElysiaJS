@@ -21,7 +21,7 @@ async function bootstrap() {
       .use(cors({
         origin: env.APP_ENV === "development"
           ? true
-          : ["https://dashboard.azidfadhil.my.id"],
+          : ["https://dashboard-mni.azidfadhil.my.id"],
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true
