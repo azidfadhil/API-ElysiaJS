@@ -1,77 +1,26 @@
 import bcrypt from "bcryptjs"
-import { prisma } from "../../database/prisma"
+import { authRepository } from "./auth.repository"
 import { UnauthorizedError } from "../../utils/errors"
 
 export async function login(email: string, password: string) {
-  const user = await prisma.mst_users.findFirst({
-    where: {
-      email,
-      deleted_at: null
-    }
-  })
-
+  // 1. Cek user exist
+  const user = await authRepository.findUserByEmail(email)
   if (!user) throw new UnauthorizedError("Invalid email or password")
 
+  // 2. Cek user aktif
   if (!user.is_active) throw new UnauthorizedError("Account is inactive")
 
+  // 3. Verifikasi password
   const isPasswordValid = await bcrypt.compare(password, user.password_hash)
   if (!isPasswordValid) throw new UnauthorizedError("Invalid email or password")
 
-  const menus = await prisma.mst_menus.findMany({
-    where: {
-      is_active: true,
-      parent_id: null,
-      module_id: null
-    },
-    orderBy: { sort_order: "asc" },
-    include: {
-      other_mst_menus: {
-        where: { is_active: true },
-        orderBy: { sort_order: "asc" },
-        include: {
-          mst_modules: {
-            include: {
-              mst_permissions: {
-                include: {
-                  trx_role_permissions: {
-                    include: {
-                      mst_roles: {
-                        include: {
-                          trx_user_roles: {
-                            where: { user_id: user.id }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  })
+  // 4. Ambil menus dan roles secara paralel
+  const [menus, userRoles] = await Promise.all([
+    authRepository.findMenus(user.id),
+    authRepository.findUserRoles(user.id)
+  ])
 
-  const userRoles = await prisma.trx_user_roles.findMany({
-    where: { user_id: user.id },
-    include: {
-      mst_roles: {
-        include: {
-          trx_role_permissions: {
-            include: {
-              mst_permissions: {
-                include: {
-                  mst_modules: true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  })
-
+  // 5. Build permissions object
   const permissions: Record<string, Record<string, boolean>> = {}
 
   for (const userRole of userRoles) {
@@ -92,17 +41,20 @@ export async function login(email: string, password: string) {
     }
   }
 
+  // 6. Build accessible menus
   const accessibleMenus = menus
     .map(menu => {
-      const children = menu.other_mst_menus.filter(child => {
-        if (!child.mst_modules) return true
-        return permissions[child.mst_modules.module_code]?.READ === true
-      }).map(child => ({
-        label: child.label,
-        url: child.url,
-        icon: child.icon,
-        sort_order: child.sort_order
-      }))
+      const children = menu.other_mst_menus
+        .filter(child => {
+          if (!child.mst_modules) return true
+          return permissions[child.mst_modules.module_code]?.READ === true
+        })
+        .map(child => ({
+          label: child.label,
+          url: child.url,
+          icon: child.icon,
+          sort_order: child.sort_order
+        }))
 
       return {
         label: menu.label,
