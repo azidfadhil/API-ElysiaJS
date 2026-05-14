@@ -2,6 +2,7 @@ import "dotenv/config"
 import { env } from "./config/env"
 
 import { Elysia } from "elysia"
+import { cors } from "@elysiajs/cors"
 import { jwt } from "@elysiajs/jwt"
 import { swagger } from "@elysiajs/swagger"
 
@@ -16,6 +17,15 @@ async function bootstrap() {
     console.log("✅ Database connected successfully")
 
     const app = new Elysia()
+
+      .use(cors({
+        origin: env.APP_ENV === "development"
+          ? true
+          : ["https://dashboard.azidfadhil.my.id"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
+      }))
 
       .onError(({ code, error, set }) => {
         if (error instanceof AppError) {
