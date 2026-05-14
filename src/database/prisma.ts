@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client"
+import { env } from "../config/env"
 
 export const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: Bun.env.DB_URL
+      url: env.DB_URL
     }
   }
 })

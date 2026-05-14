@@ -1,15 +1,14 @@
 import "dotenv/config"
+import { env } from "./config/env"
 
 import { Elysia } from "elysia"
 import { jwt } from "@elysiajs/jwt"
 import { swagger } from "@elysiajs/swagger"
 
 import { prisma } from "./database/prisma"
-import { AppError } from "./utils/errors"
-import { UnauthorizedError } from "./utils/errors"
-
-import { authModule } from "./modules/auth/auth.route"
 import { userModule } from "./modules/users/user.route"
+import { authModule } from "./modules/auth/auth.route"
+import { AppError,UnauthorizedError } from "./utils/errors"
 
 async function bootstrap() {
   try {
@@ -43,7 +42,7 @@ async function bootstrap() {
         set.status = 500
         return {
           error: 500,
-          message: Bun.env.APP_ENV === "development"
+          message: env.APP_ENV === "development"
             ? (error as Error).message
             : "Internal server error",
           pagination: null,
@@ -54,7 +53,7 @@ async function bootstrap() {
       .use(
         jwt({
           name: "jwt",
-          secret: Bun.env.JWT_SECRET!
+          secret: env.JWT_SECRET!
         })
       )
 
@@ -88,14 +87,14 @@ async function bootstrap() {
         swagger({
           documentation: {
             info: {
-              title: "ElysiaJS API",
+              title: env.APP_NAME,
               version: "1.0.0"
             }
           }
         })
       )
 
-      .listen(Bun.env.APP_PORT || 3000)
+      .listen(env.APP_PORT || 3000)
 
     console.log(
       `🦊 Server running at http://${app.server?.hostname}:${app.server?.port}`

@@ -1,4 +1,6 @@
 import Elysia from "elysia"
+import { env } from "../../config/env"
+
 import { jwt } from "@elysiajs/jwt"
 
 import { login } from "./auth.service"
@@ -10,7 +12,7 @@ export const authModule = new Elysia({ prefix: "/auth" })
   .use(
     jwt({
       name: "jwt",
-      secret: Bun.env.JWT_SECRET!,
+      secret: env.JWT_SECRET!,
       exp: "7d"
     })
   )
