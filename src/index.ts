@@ -43,7 +43,9 @@ async function bootstrap() {
         set.status = 500
         return {
           error: 500,
-          message: "Internal server error",
+          message: Bun.env.APP_ENV === "development"
+            ? (error as Error).message
+            : "Internal server error",
           pagination: null,
           data: null
         }
@@ -93,7 +95,7 @@ async function bootstrap() {
         })
       )
 
-      .listen(Bun.env.PORT || 3000)
+      .listen(Bun.env.APP_PORT || 3000)
 
     console.log(
       `🦊 Server running at http://${app.server?.hostname}:${app.server?.port}`
