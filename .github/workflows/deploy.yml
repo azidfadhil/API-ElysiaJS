@@ -2,19 +2,23 @@ name: Deploy API
 
 on:
   push:
-    branches: ["main"]
+    branches: 
+      - main        # trigger production
+      - staging     # trigger staging (nanti)
 
 jobs:
-  deploy:
-    name: Deploy
+  deploy-production:
+    name: Deploy Production
     runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ubuntu
+          username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
@@ -28,7 +32,11 @@ jobs:
 
             echo "⚙️ Create .env"
             cat > .env << 'EOF'
-            ${{ secrets.ENV_ELYSIA }}
+            DB_URL=${{ secrets.DB_URL }}
+            APP_PORT=${{ secrets.APP_PORT }}
+            APP_ENV=${{ secrets.APP_ENV }}
+            APP_NAME=${{ secrets.APP_NAME }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
             echo "🐳 Deploy"
