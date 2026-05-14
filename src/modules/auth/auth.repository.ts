@@ -68,6 +68,22 @@ export const authRepository = {
         }
       }
     })
+  },
+
+  async findUserById(id: bigint) {
+    return await prisma.mst_users.findFirst({
+      where: {
+        id,
+        deleted_at: null,
+        is_active: true
+      },
+      select: {
+        id: true,
+        full_name: true,
+        username: true,
+        email: true
+      }
+    })
   }
 
 }
